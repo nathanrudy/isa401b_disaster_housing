@@ -21,7 +21,9 @@ allowing you to properly analyze, visualize, and display the aforementioned info
 ## Dataset Information, 1
 
 **Dataset:** OpenFEMA Dataset: Disaster Declarations Summaries - v2
+
 **Publisher:** FEMA
+
 **Website:** https://www.fema.gov/openfema-data-page/disaster-declarations-summaries-v2
 
 The OpenFEMA Dataset is a summarized dataset describing all federally declared disasters, beginning in 1953. This information is available for the nation as a whole, for individual states, and for county areas.
@@ -47,7 +49,9 @@ The OpenFEMA Dataset is a summarized dataset describing all federally declared d
 ## Dataset Information, 2
 
 **Dataset:** Zillow Home Value Index (ZHVI)
+
 **Publisher:** Zillow
+
 **Website:** https://www.zillow.com/research/data/
 
 The Zillow Home Value Index is a measure of the typical home value and market changes across a given region and housing type. It reflects the typical value for homes in the 35th to 65th percentile range. Available as a smoothed, seasonally adjusted measure and as a raw measure.
@@ -71,7 +75,9 @@ NOTE: In the original file, date and property values were displayed horizontally
 ## Dataset Information, 3
 
 **Dataset:** Losses from Natural Disasters
+
 **Publisher:** Federal Reserve Bank of New York
+
 **Website:** https://www.newyorkfed.org/research/policy/natural-disaster-losses/#interactive
 
 Displays county-level estimates of inflation-adjusted annual direct damages from natural disasters across the United States, based on a methodology that was developed by New York Fed economists and applied to the National Oceanic and Atmospheric Administration???s Storm Events Database.

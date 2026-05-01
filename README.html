@@ -361,14 +361,180 @@ property values</strong></p>
 <p><br></p>
 <div id="what-is-this-code" class="section level2">
 <h2>What is this code?</h2>
-<p>This Rmd compiles data from the following sources, allowing you to
-properly clean, organize, and display the information:</p>
-<ul>
-<li>Summary of Disaster Declarations, by county, by disaster, FEMA</li>
-<li>Median property values by county, by month (in $USD), Zillow</li>
-<li>Economic impact of natural disasters, by county, by year (in $USD),
-Federal Reserve Bank of New York</li>
-</ul>
+<p>This Rmd compiles, cleans, and joins, validates, and saves data from
+3 datasets, allowing you to properly analyze, visualize, and display the
+aforementioned information.</p>
+</div>
+<div id="dataset-information-1" class="section level2">
+<h2>Dataset Information, 1</h2>
+<p><strong>Dataset:</strong> OpenFEMA Dataset: Disaster Declarations
+Summaries - v2 <strong>Publisher:</strong> FEMA
+<strong>Website:</strong> <a href="https://www.fema.gov/openfema-data-page/disaster-declarations-summaries-v2" class="uri">https://www.fema.gov/openfema-data-page/disaster-declarations-summaries-v2</a></p>
+<p>The OpenFEMA Dataset is a summarized dataset describing all federally
+declared disasters, beginning in 1953. This information is available for
+the nation as a whole, for individual states, and for county areas.</p>
+<div id="key-fields" class="section level3">
+<h3>Key Fields</h3>
+<table>
+<colgroup>
+<col width="35%" />
+<col width="65%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>disasterNumber</code></td>
+<td>Sequentially assigned number used to designate an event or incident
+declared as a disaster.</td>
+</tr>
+<tr class="even">
+<td><code>state</code></td>
+<td>The name or phrase describing the U.S. state, district, or
+territory.</td>
+</tr>
+<tr class="odd">
+<td><code>declarationDate</code></td>
+<td>Date the disaster was declared.</td>
+</tr>
+<tr class="even">
+<td><code>incidentType</code></td>
+<td>The primary or official type of incident such as fire or flood.</td>
+</tr>
+<tr class="odd">
+<td><code>incidentBeginDate</code></td>
+<td>Date the incident itself began.</td>
+</tr>
+<tr class="even">
+<td><code>incidentEndDate</code></td>
+<td>Date the incident itself ended.</td>
+</tr>
+<tr class="odd">
+<td><code>fipsStateCode</code></td>
+<td>FIPS three-digit numeric code used to identify counties and county
+equivalents in the United States, the District of Columbia, US
+territories, outlying areas of the US and freely associated states.</td>
+</tr>
+<tr class="even">
+<td><code>fipsCountyCode</code></td>
+<td>FIPS two-digit numeric code used to identify the United States, the
+District of Columbia, US territories, outlying areas of the US and
+freely associated states.</td>
+</tr>
+</tbody>
+</table>
+<p><br></p>
+</div>
+</div>
+<div id="dataset-information-2" class="section level2">
+<h2>Dataset Information, 2</h2>
+<p><strong>Dataset:</strong> Zillow Home Value Index (ZHVI)</p>
+<p><strong>Publisher:</strong> Zillow</p>
+<p><strong>Website:</strong> <a href="https://www.zillow.com/research/data/" class="uri">https://www.zillow.com/research/data/</a></p>
+<p>The Zillow Home Value Index is a measure of the typical home value
+and market changes across a given region and housing type. It reflects
+the typical value for homes in the 35th to 65th percentile range.
+Available as a smoothed, seasonally adjusted measure and as a raw
+measure.</p>
+<div id="key-fields-1" class="section level3">
+<h3>Key Fields</h3>
+<table>
+<colgroup>
+<col width="35%" />
+<col width="65%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>RegionID</code></td>
+<td>Concatenation of State FIPS code and County FIPS code.</td>
+</tr>
+<tr class="even">
+<td><code>State</code></td>
+<td>The name or phrase describing the U.S. state, district, or
+territory.</td>
+</tr>
+<tr class="odd">
+<td><code>CountyName</code></td>
+<td>The name or phrase describing the U.S. county, parish, or
+borough.</td>
+</tr>
+<tr class="even">
+<td><code>date</code></td>
+<td>The date of the observation.</td>
+</tr>
+<tr class="odd">
+<td><code>zhvi</code></td>
+<td>The typical value of homes in the 35th-65th percentile range.</td>
+</tr>
+</tbody>
+</table>
+<p>NOTE: In the original file, date and property values were displayed
+horizontally, giving us a wide data table. The date and observation
+value were pivoted in Tableau for proper analysis.</p>
+<p><br></p>
+</div>
+</div>
+<div id="dataset-information-3" class="section level2">
+<h2>Dataset Information, 3</h2>
+<p><strong>Dataset:</strong> Losses from Natural Disasters
+<strong>Publisher:</strong> Federal Reserve Bank of New York
+<strong>Website:</strong> <a href="https://www.newyorkfed.org/research/policy/natural-disaster-losses/#interactive" class="uri">https://www.newyorkfed.org/research/policy/natural-disaster-losses/#interactive</a></p>
+<p>Displays county-level estimates of inflation-adjusted annual direct
+damages from natural disasters across the United States, based on a
+methodology that was developed by New York Fed economists and applied to
+the National Oceanic and Atmospheric Administration???s Storm Events
+Database.</p>
+<div id="key-fields-2" class="section level3">
+<h3>Key Fields</h3>
+<table>
+<colgroup>
+<col width="35%" />
+<col width="65%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>event_id</code></td>
+<td>A code assigned to each event/disaster by NOAA.</td>
+</tr>
+<tr class="even">
+<td><code>fips</code></td>
+<td>State-county FIPS code.</td>
+</tr>
+<tr class="odd">
+<td><code>disaster_group</code></td>
+<td>Grouping of event types.</td>
+</tr>
+<tr class="even">
+<td><code>damages_property</code></td>
+<td>Monetized losses of the physical destruction of property from the
+event. The variable is expressed in nominal dollars (i.e., not inflation
+adjusted).</td>
+</tr>
+<tr class="odd">
+<td><code>fatalities_direct</code></td>
+<td>Fatalities that are caused by impact or debris from the event
+itself.</td>
+</tr>
+</tbody>
+</table>
+<p><br></p>
+</div>
 </div>
 </div>
 
