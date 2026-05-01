@@ -1,3 +1,5 @@
 # isa401b_disaster_housing
-An ISA401B project focused on comparing natural 
-disaster occurrences with housing values, by county
+
+Miami University ISA401B Final Project
+
+**Your tool for analyzing the impact of natural disasters on property values**
