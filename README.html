@@ -575,13 +575,41 @@ itself.</td>
 <h3>Zillow:</h3>
 <ol style="list-style-type: decimal">
 <li>Fields RegionID, SizeRank, RegionType, StateName, and Metro are
-dropped</li>
+dropped.</li>
 <li>county_fips is determined through mutation of StateCodeFIPS and
-MunicipalCodeFIPS</li>
+MunicipalCodeFIPS.</li>
 <li>Date and ZHVI were pivoted, turning wide data into long data.</li>
 </ol>
-<p>Each row is now: one county, one month, one median home value</p>
+<p>Each row now displays one county, one month, and one median home
+value</p>
+<p><br></p>
 </div>
+<div id="fema" class="section level3">
+<h3>FEMA:</h3>
+<ol style="list-style-type: decimal">
+<li>county_fips is determined through mutation of StateCodeFIPS and
+MunicipalCodeFIPS.</li>
+<li>Fields county_fips, state, disasterNumber, incidentType,
+declarationDate, incidentBeginDate, incidentEndDate are selected.</li>
+<li>state is filtered to only include States</li>
+</ol>
+<p><br></p>
+</div>
+<div id="federal-reserve-bank-of-new-york" class="section level3">
+<h3>Federal Reserve Bank of New York:</h3>
+<ol style="list-style-type: decimal">
+<li>county_fips is determined through mutation of fips.</li>
+<li>Fields county_fips, begin_date, disaster_group, damages_property,
+and fatalities_direct are selected</li>
+</ol>
+<p><br></p>
+</div>
+</div>
+<div id="data-merging" class="section level2">
+<h2>Data Merging</h2>
+<ol style="list-style-type: decimal">
+<li></li>
+</ol>
 </div>
 </div>
 

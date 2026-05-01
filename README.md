@@ -136,4 +136,9 @@ Each row now displays one county, one month, and one median home value
   1. county_fips is determined through mutation of fips.
   2. Fields county_fips, begin_date, disaster_group, damages_property, and fatalities_direct are selected
 
+
+<br>
+
+## Data Merging
+ 1. 
  
