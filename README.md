@@ -18,7 +18,7 @@ This Rmd compiles, cleans, and joins, validates, and saves data from 3 datasets,
 allowing you to properly analyze, visualize, and display the aforementioned information.
 
 
-## Dataset Information
+## Dataset Information, 1
 
 **Dataset:** OpenFEMA Dataset: Disaster Declarations Summaries - v2
 **Publisher:** FEMA
@@ -32,18 +32,61 @@ The OpenFEMA Dataset is a summarized dataset describing all federally declared d
 | Field | Description |
 |-------|-------------|
 | `disasterNumber` | Sequentially assigned number used to designate an event or incident declared as a disaster. |
-| `state` | The name or phrase describing the U.S. state, district, or territory |
-| `declarationDate` | Date the disaster was declared |
-| `incidentType` | The primary or official type of incident such as fire or flood |
-| `incidentBeginDate` | Date the incident itself began |
-| `incidentEndDate` | Date the incident itself ended |
+| `state` | The name or phrase describing the U.S. state, district, or territory. |
+| `declarationDate` | Date the disaster was declared. |
+| `incidentType` | The primary or official type of incident such as fire or flood. |
+| `incidentBeginDate` | Date the incident itself began. |
+| `incidentEndDate` | Date the incident itself ended. |
 | `fipsStateCode` | FIPS three-digit numeric code used to identify counties and county equivalents in the United States, the District of Columbia, US territories, outlying areas of the US and freely associated states. |
-| `fipsCountyCode` | FIPS two-digit numeric code used to identify the United States, the District of Columbia, US territories, outlying areas of the US and freely associated states |
+| `fipsCountyCode` | FIPS two-digit numeric code used to identify the United States, the District of Columbia, US territories, outlying areas of the US and freely associated states. |
 
 
- * 
- * Median property values by county, by month (in $USD), Zillow
- * Economic impact of natural disasters, by county, by year (in $USD), Federal Reserve Bank of New York
+<br>
+
+
+## Dataset Information, 2
+
+**Dataset:** Zillow Home Value Index (ZHVI)
+**Publisher:** Zillow
+**Website:** https://www.zillow.com/research/data/
+
+The Zillow Home Value Index is a measure of the typical home value and market changes across a given region and housing type. It reflects the typical value for homes in the 35th to 65th percentile range. Available as a smoothed, seasonally adjusted measure and as a raw measure.
+
+### Key Fields
+
+| Field | Description |
+|-------|-------------|
+| `RegionID` | Concatenation of State FIPS code and County FIPS code. |
+| `State` | The name or phrase describing the U.S. state, district, or territory. |
+| `CountyName` |  The name or phrase describing the U.S. county, parish, or borough. |
+| `date` | The date of the observation. |
+| `zhvi` | The typical value of homes in the 35th-65th percentile range. |
+
+NOTE: In the original file, date and property values were displayed horizontally, giving us a wide data table. The date and observation value were pivoted in Tableau for proper analysis.
+
+
+<br>
+
+
+## Dataset Information, 3
+
+**Dataset:** Losses from Natural Disasters
+**Publisher:** Federal Reserve Bank of New York
+**Website:** https://www.newyorkfed.org/research/policy/natural-disaster-losses/#interactive
+
+Displays county-level estimates of inflation-adjusted annual direct damages from natural disasters across the United States, based on a methodology that was developed by New York Fed economists and applied to the National Oceanic and Atmospheric Administration???s Storm Events Database.
+
+### Key Fields
+
+| Field | Description |
+|-------|-------------|
+| `event_id` | A code assigned to each event/disaster by NOAA. |
+| `fips` | State-county FIPS code. |
+| `disaster_group` | Grouping of event types. |
+| `damages_property` | Monetized losses of the physical destruction of property from the event. The variable is expressed in nominal dollars (i.e., not inflation adjusted). |
+| `fatalities_direct` |  Fatalities that are caused by impact or debris from the event itself. |
+
+
 
  <br>
  
