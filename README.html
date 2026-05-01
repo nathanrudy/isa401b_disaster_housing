@@ -359,6 +359,38 @@ display: none;
 <p><strong>Your tool for analyzing the impact of natural disasters on
 property values</strong></p>
 <p><br></p>
+<div id="necessary-packages" class="section level2">
+<h2>Necessary packages</h2>
+<p>The following packages are required to sensure successful execution
+of the code:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>tidyverse</code></td>
+<td>Includes dplyr, tidyr, readr</td>
+</tr>
+<tr class="even">
+<td><code>httr</code></td>
+<td>For API calls</td>
+</tr>
+<tr class="odd">
+<td><code>jsonlite</code></td>
+<td>For parsing JSON from FEMA</td>
+</tr>
+<tr class="even">
+<td><code>lubridate</code></td>
+<td>For working with dates</td>
+</tr>
+</tbody>
+</table>
+<p><br></p>
+</div>
 <div id="what-is-this-code" class="section level2">
 <h2>What is this code?</h2>
 <p>This Rmd compiles, cleans, and joins, validates, and saves data from
@@ -368,8 +400,9 @@ aforementioned information.</p>
 <div id="dataset-information-1" class="section level2">
 <h2>Dataset Information, 1</h2>
 <p><strong>Dataset:</strong> OpenFEMA Dataset: Disaster Declarations
-Summaries - v2 <strong>Publisher:</strong> FEMA
-<strong>Website:</strong> <a href="https://www.fema.gov/openfema-data-page/disaster-declarations-summaries-v2" class="uri">https://www.fema.gov/openfema-data-page/disaster-declarations-summaries-v2</a></p>
+Summaries - v2</p>
+<p><strong>Publisher:</strong> FEMA</p>
+<p><strong>Website:</strong> <a href="https://www.fema.gov/openfema-data-page/disaster-declarations-summaries-v2" class="uri">https://www.fema.gov/openfema-data-page/disaster-declarations-summaries-v2</a></p>
 <p>The OpenFEMA Dataset is a summarized dataset describing all federally
 declared disasters, beginning in 1953. This information is available for
 the nation as a whole, for individual states, and for county areas.</p>
@@ -486,9 +519,9 @@ value were pivoted in Tableau for proper analysis.</p>
 </div>
 <div id="dataset-information-3" class="section level2">
 <h2>Dataset Information, 3</h2>
-<p><strong>Dataset:</strong> Losses from Natural Disasters
-<strong>Publisher:</strong> Federal Reserve Bank of New York
-<strong>Website:</strong> <a href="https://www.newyorkfed.org/research/policy/natural-disaster-losses/#interactive" class="uri">https://www.newyorkfed.org/research/policy/natural-disaster-losses/#interactive</a></p>
+<p><strong>Dataset:</strong> Losses from Natural Disasters</p>
+<p><strong>Publisher:</strong> Federal Reserve Bank of New York</p>
+<p><strong>Website:</strong> <a href="https://www.newyorkfed.org/research/policy/natural-disaster-losses/#interactive" class="uri">https://www.newyorkfed.org/research/policy/natural-disaster-losses/#interactive</a></p>
 <p>Displays county-level estimates of inflation-adjusted annual direct
 damages from natural disasters across the United States, based on a
 methodology that was developed by New York Fed economists and applied to
@@ -535,6 +568,9 @@ itself.</td>
 </table>
 <p><br></p>
 </div>
+</div>
+<div id="cleaning-process" class="section level2">
+<h2>Cleaning Process</h2>
 </div>
 </div>
 

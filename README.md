@@ -11,8 +11,22 @@ Miami University ISA401B Final Project, Data Organization
 
 <br>
 
+## Necessary Packages
 
-## What is this code?
+The following packages are required to sensure successful execution of the code:
+
+| Package | Description |
+|-------|-------------|
+| `tidyverse` | Includes dplyr, tidyr, readr |
+| `httr` | For API calls |
+| `jsonlite` | For parsing JSON from FEMA |
+| `lubridate` | For working with dates |
+
+
+<br>
+
+
+## What is this Code?
 
 This Rmd compiles, cleans, and joins, validates, and saves data from 3 datasets, 
 allowing you to properly analyze, visualize, and display the aforementioned information.
@@ -93,7 +107,13 @@ Displays county-level estimates of inflation-adjusted annual direct damages from
 | `fatalities_direct` |  Fatalities that are caused by impact or debris from the event itself. |
 
 
+<br>
+ 
+ 
+## Cleaning Process
 
- <br>
+
+
+
  
  
