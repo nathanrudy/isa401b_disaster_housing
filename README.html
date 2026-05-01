@@ -360,13 +360,13 @@ display: none;
 property values</strong></p>
 <p><br></p>
 <div id="necessary-packages" class="section level2">
-<h2>Necessary packages</h2>
+<h2>Necessary Packages</h2>
 <p>The following packages are required to sensure successful execution
 of the code:</p>
 <table>
 <thead>
 <tr class="header">
-<th>Field</th>
+<th>Package</th>
 <th>Description</th>
 </tr>
 </thead>
@@ -392,7 +392,7 @@ of the code:</p>
 <p><br></p>
 </div>
 <div id="what-is-this-code" class="section level2">
-<h2>What is this code?</h2>
+<h2>What is this Code?</h2>
 <p>This Rmd compiles, cleans, and joins, validates, and saves data from
 3 datasets, allowing you to properly analyze, visualize, and display the
 aforementioned information.</p>
@@ -571,6 +571,17 @@ itself.</td>
 </div>
 <div id="cleaning-process" class="section level2">
 <h2>Cleaning Process</h2>
+<div id="zillow" class="section level3">
+<h3>Zillow:</h3>
+<ol style="list-style-type: decimal">
+<li>Fields RegionID, SizeRank, RegionType, StateName, and Metro are
+dropped</li>
+<li>county_fips is determined through mutation of StateCodeFIPS and
+MunicipalCodeFIPS</li>
+<li>Date and ZHVI were pivoted, turning wide data into long data.</li>
+</ol>
+<p>Each row is now: one county, one month, one median home value</p>
+</div>
 </div>
 </div>
 

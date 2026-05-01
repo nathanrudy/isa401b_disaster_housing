@@ -112,7 +112,12 @@ Displays county-level estimates of inflation-adjusted annual direct damages from
  
 ## Cleaning Process
 
+### Zillow:
+  1. Fields RegionID, SizeRank, RegionType, StateName, and Metro are dropped
+  2. county_fips is determined through mutation of StateCodeFIPS and MunicipalCodeFIPS
+  3. Date and ZHVI were pivoted, turning wide data into long data. 
 
+Each row now displays one county, one month, and one median home value
 
 
  
