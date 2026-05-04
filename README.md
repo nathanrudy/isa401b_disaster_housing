@@ -94,7 +94,7 @@ NOTE: In the original file, date and property values were displayed horizontally
 
 **Website:** https://www.newyorkfed.org/research/policy/natural-disaster-losses/#interactive
 
-Displays county-level estimates of inflation-adjusted annual direct damages from natural disasters across the United States, based on a methodology that was developed by New York Fed economists and applied to the National Oceanic and Atmospheric Administration???s Storm Events Database.
+Displays county-level estimates of inflation-adjusted annual direct damages from natural disasters across the United States, based on a methodology that was developed by New York Fed economists and applied to the National Oceanic and Atmospheric Administration$'$s Storm Events Database.
 
 ### Key Fields
 
