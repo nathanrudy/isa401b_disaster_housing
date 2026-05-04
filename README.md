@@ -106,6 +106,7 @@ Displays county-level estimates of inflation-adjusted annual direct damages from
 | `damages_property` | Monetized losses of the physical destruction of property from the event. The variable is expressed in nominal dollars (i.e., not inflation adjusted). |
 | `fatalities_direct` |  Fatalities that are caused by impact or debris from the event itself. |
 
+NOTE: By running the R code, this data is scraped as a .zip file, downloaded, unzipped, and read, before cleaning.
 
 <br>
  
@@ -139,6 +140,26 @@ Each row now displays one county, one month, and one median home value
 
 <br>
 
+
 ## Data Merging
- 1. 
+ 1. FEMA data is filtered to only include observations after the year 2000 (the earliest date of observations provided by Zillow).
+ 2. FEMA and NYFED data is merged through a LEFTJOIN, based on county_fips and date, using a many-to-many relationship.
+ 3. The Zillow dataset is merged with the FEMA/NYFED dataset, again based on county_fips and date, using a many-to-many relationship.
+
+
+<br>
+
+
+## Data Validation
+ 1. A data validation tibble is created, ensuring that data is not duplicated, missing, formatted incorrectly, or failed to match during the JOIN process.
+ 2. Violations of aforementioned rules are recorded, displayed, and removed.
+ 
+
+<br>
+
+
+## Saving Final Dataset
+ 1. write_csv is used to save the cleaned, merged, and organized dataset to a new file, ready for import into Tableau.
+ 2. Final dataset dimensions, date ranges, unique county counts, and counties with at least one disaster are recorded and printed, providing a summary of the dataset.
+
  

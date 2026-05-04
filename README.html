@@ -566,6 +566,8 @@ itself.</td>
 </tr>
 </tbody>
 </table>
+<p>NOTE: By running the R code, this data is scraped as a .zip file,
+downloaded, unzipped, and read, before cleaning.</p>
 <p><br></p>
 </div>
 </div>
@@ -608,7 +610,34 @@ and fatalities_direct are selected</li>
 <div id="data-merging" class="section level2">
 <h2>Data Merging</h2>
 <ol style="list-style-type: decimal">
-<li></li>
+<li>FEMA data is filtered to only include observations after the year
+2000 (the earliest date of observations provided by Zillow).</li>
+<li>FEMA and NYFED data is merged through a LEFTJOIN, based on
+county_fips and date, using a many-to-many relationship.</li>
+<li>The Zillow dataset is merged with the FEMA/NYFED dataset, again
+based on county_fips and date, using a many-to-many relationship.</li>
+</ol>
+<p><br></p>
+</div>
+<div id="data-validation" class="section level2">
+<h2>Data Validation</h2>
+<ol style="list-style-type: decimal">
+<li>A data validation tibble is created, ensuring that data is not
+duplicated, missing, formatted incorrectly, or failed to match during
+the JOIN process.</li>
+<li>Violations of aforementioned rules are recorded, displayed, and
+removed.</li>
+</ol>
+<p><br></p>
+</div>
+<div id="saving-final-dataset" class="section level2">
+<h2>Saving Final Dataset</h2>
+<ol style="list-style-type: decimal">
+<li>write_csv is used to save the cleaned, merged, and organized dataset
+to a new file, ready for import into Tableau.</li>
+<li>Final dataset dimensions, date ranges, unique county counts, and
+counties with at least one disaster are recorded and printed, providing
+a summary of the dataset.</li>
 </ol>
 </div>
 </div>
