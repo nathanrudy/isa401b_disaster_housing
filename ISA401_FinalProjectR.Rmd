@@ -1,0 +1,291 @@
+---
+title: "ISA 401 Final Project"
+author: "Elaine, Nathan, Abby, Reid"
+date: "2026-04-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Setup
+install.packages(c("tidyverse", "lubridate"))
+
+```{r libraries, message=FALSE, warning=FALSE}
+library(tidyverse)   # includes dplyr, tidyr, readr
+library(lubridate)   # for working with dates
+```
+
+
+## Load Zillow CSV
+In the code chunk below, we load raw home value data directly from Zillow's website. This dataset contains the Zillow Home Value Index (ZHVI) at the county level for single-family homes and condos, covering the middle tier of the market. Each column after the geographic identifiers represents a calendar month.
+
+```{r load_zillow}
+zillow_raw <- read_csv("https://files.zillowstatic.com/research/public_csvs/zhvi/County_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv?t=1777295747")
+
+head(zillow_raw)
+```
+
+
+## Clean Zillow
+In the code chunk below, we reshape and clean the raw Zillow data. First, we drop administrative columns that are not needed for analysis (region ID, size rank, region type, state name, and metro area). Then we construct a standardized 5-digit county FIPS code by concatenating the state and county FIPS components. Next, we pivot the wide date-column format into a tidy long format so that each row represents one county in one month, making the data joinable to the other sources. Finally, we convert the date strings to proper Date objects.
+
+```{r clean_zillow}
+zillow_clean <- zillow_raw |> 
+  select(-RegionID, -SizeRank, -RegionType, -StateName, -Metro) |> 
+  mutate(county_fips = paste0(StateCodeFIPS, MunicipalCodeFIPS)) |>
+  pivot_longer(
+    cols = matches("^\\d{4}-\\d{2}-\\d{2}$"),  # selects all date columns
+    names_to = "date",
+    values_to = "zhvi"
+  ) |>
+  mutate(date = as.Date(date))
+
+head(zillow_clean)
+# Now each row = one county + one month + one home value
+```
+
+
+## Load FEMA CSV
+In the code chunk below, we load all federal major disaster declarations directly from the
+FEMA Open Data API. The dataset covers every federally declared disaster in the United States,
+with one row per county-level declaration. Key fields include the type of declaration, the
+incident type (e.g., hurricane, flood, wildfire), program flags indicating which federal
+assistance programs were activated, and date fields for when the disaster was declared and
+when the incident began and ended.
+
+```{r load_fema}
+fema_raw <- read_csv("https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries.csv")
+
+head(fema_raw)
+```
+
+
+## Define US States
+In the code chunk below, we create a reference vector of two-letter postal abbreviations for
+all 50 U.S. states plus the District of Columbia. This vector is used in the FEMA cleaning
+step to filter out territories and outlying areas (such as Puerto Rico, Guam, and the U.S.
+Virgin Islands) that do not have matching Zillow home value data, ensuring a clean join later.
+Note: base R's built-in `state.abb` excludes DC, so we define the vector manually.
+
+```{r define_us_states}
+us_states <- c(
+  "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA",
+  "HI","ID","IL","IN","IA","KS","KY","LA","ME","MD",
+  "MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ",
+  "NM","NY","NC","ND","OH","OK","OR","PA","RI","SC",
+  "SD","TN","TX","UT","VT","VA","WA","WV","WI","WY",
+  "DC"
+)
+```
+
+
+## Clean FEMA
+In the code chunk below, we filter and reshape the raw FEMA declarations data. We keep only
+Major Disaster Declarations (type "DR"), which are the most severe federal designation and
+the most relevant to housing market impacts. We exclude records where the county FIPS code is
+"000", which indicates a statewide declaration rather than a specific county. We then build a
+standardized 5-digit county FIPS code and select the columns needed for analysis: geographic
+identifiers, disaster metadata, date fields, and program flags. Finally, we restrict the data
+to the 50 states plus DC using the reference vector defined above.
+
+```{r clean_fema}
+fema_clean <- fema_raw |> 
+  filter(declarationType == "DR") |> 
+  filter(fipsCountyCode != "000") |> 
+  mutate(county_fips = paste0(fipsStateCode, fipsCountyCode)) |> 
+  select(county_fips, state, disasterNumber, incidentType, 
+         declarationDate, incidentBeginDate, incidentEndDate,
+         iaProgramDeclared, paProgramDeclared, hmProgramDeclared) |>
+  filter(state %in% us_states)
+```
+
+
+## Load NY Fed Data
+In the code chunk below, we acquire natural disaster loss data from the New York Fed's research tool via direct programmatic download. We download the ZIP archive to a temporary file, unzip it, and read the extracted CSV. This source provides inflation-adjusted damage estimates and direct fatality counts at the county level for disasters dating back to 1980.
+
+```{r load_nyfed}
+# Download the NY Fed natural disaster losses ZIP directly
+nyfed_zip_url <- "https://www.newyorkfed.org/medialibrary/Research/Interactives/Data/Natural-Disasters-Losses/NYFed_natural-disasters_download_data.zip"
+
+tmp_zip <- tempfile(fileext = ".zip")
+tmp_dir  <- tempdir()
+
+download.file(nyfed_zip_url, tmp_zip, mode = "wb")
+
+# Unzip and identify the county-level CSV
+unzip(tmp_zip, exdir = tmp_dir)
+extracted_files <- list.files(tmp_dir, pattern = "\\.csv|\\.xlsx",
+                               full.names = TRUE, recursive = TRUE)
+cat("Files in ZIP:\n")
+print(extracted_files)
+
+# Read the file
+nyfed_raw <- read_csv(extracted_files[1])
+head(nyfed_raw)
+```
+
+
+## Clean NY Fed Data
+In the code chunk below, we clean and reshape the raw NY Fed dataset. We filter to population-weighted records only (dropping area-weighted duplicates) to avoid double-counting damage figures. We then pad the FIPS code to 5 characters to match the format used in the Zillow and FEMA datasets. Finally, we select and rename the four key fields needed for the join: the county FIPS code, the disaster start date, the disaster category, the inflation-adjusted total damage estimate, and the count of direct fatalities.
+
+```{r clean_nyfed}
+nyfed_clean <- nyfed_raw |>
+  filter(weight_type == "Population") |>
+  mutate(county_fips = str_pad(as.character(fips), width = 5, pad = "0")) |>
+  select(
+    county_fips,
+    begin_date,
+    disaster_group,
+    damage_total = damages_total_adj,
+    fatalities   = fatalities_direct
+  )
+
+head(nyfed_clean)
+```
+
+
+## Join FEMA + NY Fed
+In the code chunk below, we combine the FEMA declarations with the NY Fed damage estimates. First, we aggregate the NY Fed data to the monthly county level by summing damage and fatalities within each county-month-disaster group. This aggregation step is critical: it prevents a row explosion when joining, since FEMA can have multiple declarations per county per month while NY Fed has multiple damage events. Then, we floor the FEMA declaration dates to month-start and restrict to 2000 onward to align with the Zillow date range. After joining on county FIPS and month, we use `distinct()` to deduplicate on the natural key (county + month + disaster number + disaster group), retaining the first row per group. We check row counts before and after the join to confirm no unexpected expansion occurred.
+
+```{r join_fema_nyfed}
+# Aggregate NY Fed to monthly county level FIRST (avoids row explosion)
+nyfed_monthly <- nyfed_clean |>
+  mutate(date = floor_date(begin_date, "month")) |>
+  group_by(county_fips, date, disaster_group) |>
+  summarise(
+    damage_total  = sum(damage_total, na.rm = TRUE),
+    fatalities    = sum(fatalities,   na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# Floor FEMA declaration date to month-start AND filter to 2000+
+fema_monthly <- fema_clean |>
+  mutate(date = floor_date(as.Date(declarationDate), "month")) |>
+  filter(date >= as.Date("2000-01-01"))
+
+# Row counts before join
+cat("FEMA rows before join:", nrow(fema_monthly), "\n")
+cat("NYFed rows before join:", nrow(nyfed_monthly), "\n")
+
+# Join FEMA + NYFed on county + month
+fema_nyfed <- fema_monthly |>
+  left_join(nyfed_monthly, by = c("county_fips", "date"),
+            relationship = "many-to-many") |>
+  distinct(county_fips, date, disasterNumber, disaster_group,
+           .keep_all = TRUE)
+
+# Row count after join (confirm no unexpected explosion)
+cat("Rows after join + dedup:", nrow(fema_nyfed), "\n")
+glimpse(fema_nyfed)
+```
+
+
+## Join Combined Disaster Data to Zillow
+In the code chunk below, we produce the final merged dataset by joining the combined FEMA + NY Fed disaster data onto the Zillow home value data. We first floor all Zillow dates to month-start to align with the disaster data. We then left-join so that every county-month with a Zillow home value estimate is retained, whether or not a disaster occurred in that county that month. Rows without a disaster will have NA for all disaster columns, effectively serving as the "no-disaster" control observations. We then drop rows where Zillow has no home value estimate (i.e., counties not covered by Zillow), and print row counts before and after to confirm the join behaved as expected.
+
+```{r join_zillow}
+# Floor Zillow dates to month-start to match disaster data
+zillow_monthly <- zillow_clean |>
+  mutate(date = floor_date(date, "month"))
+
+# Row count before join
+cat("Zillow rows before join:", nrow(zillow_monthly), "\n")
+
+# Left join: keep all Zillow county-months; attach disaster info where available
+final_dataset <- zillow_monthly |>
+  left_join(fema_nyfed, by = c("county_fips", "date"),
+            relationship = "many-to-many") |>
+  filter(!is.na(zhvi))
+
+# Row count after join
+cat("Rows in final dataset:", nrow(final_dataset), "\n")
+glimpse(final_dataset)
+```
+
+
+## Data Validation Table
+In the code chunk below, we run a series of data quality checks on the final merged dataset and compile the results into a single validation table. Each row in the table corresponds to one check, and the Violations column shows the count of records that fail that check. Checks include: duplicate rows, missing geographic or value fields, impossible values (negative damage, ZHVI below $10,000), FIPS codes with incorrect length, logical date violations (disaster end before begin), and unmatched keys from each source that did not find a corresponding Zillow county. A violation count of zero indicates a clean pass for that check.
+
+```{r validation_table}
+validation_table <- tibble(
+  Check = c(
+    "Duplicate rows",
+    "Missing county_fips",
+    "Missing ZHVI",
+    "Negative damage_total",
+    "Invalid FIPS length (not 5 chars)",
+    "ZHVI below $10,000",
+    "Disaster end before begin",
+    "FEMA rows that didn't match any Zillow county",
+    "NYFed rows that didn't match any Zillow county"
+  ),
+  Violations = c(
+    sum(duplicated(final_dataset)),
+    sum(is.na(final_dataset$county_fips)),
+    sum(is.na(final_dataset$zhvi)),
+    sum(final_dataset$damage_total < 0, na.rm = TRUE),
+    sum(nchar(final_dataset$county_fips) != 5, na.rm = TRUE),
+    sum(final_dataset$zhvi < 10000, na.rm = TRUE),
+    sum(as.Date(final_dataset$incidentEndDate) < as.Date(final_dataset$incidentBeginDate), na.rm = TRUE),
+    sum(!fema_monthly$county_fips %in% zillow_monthly$county_fips),
+    sum(!nyfed_monthly$county_fips %in% zillow_monthly$county_fips)
+  )
+)
+
+print(validation_table)
+```
+
+
+## Save the Final Dataset
+In the code chunk below, we write the final cleaned and merged dataset to a CSV file for use in Tableau. We also print a brief summary showing the total number of rows and columns, the date range covered, the number of unique counties in the dataset, and the number of counties that experienced at least one federally declared disaster.
+
+```{r save_final}
+write_csv(final_dataset, "final_merged_dataset.csv")
+
+cat("Final dataset dimensions:", nrow(final_dataset), "rows x", ncol(final_dataset), "cols\n")
+cat("Date range:", as.character(min(final_dataset$date)), "to", as.character(max(final_dataset$date)), "\n")
+cat("Unique counties:", n_distinct(final_dataset$county_fips), "\n")
+cat("Counties with at least one disaster:", 
+    n_distinct(final_dataset$county_fips[!is.na(final_dataset$disasterNumber)]), "\n")
+```
+
+
+## Build Before/After Disaster Dataset 
+In the code chunk below, we create a restructured dataset for Tableau's housing price impact and recovery charts (Insights 3 & 4). The current final_merged_dataset only contains the disaster month for each county, making before/after comparison impossible in Tableau. This chunk fixes that by cross-joining each county's FULL monthly ZHVI history to each of its disaster events, then computing months_rel = months before/after declaration date. Filtered to -24 through +48 months. Output is a separate CSV loaded into Tableau as a second data source.
+
+```{r event-study-dataset}
+# Step 1: Extract one row per unique county-disaster event. Uses final_dataset to retain disaster_group (from NYFed) for Tableau color
+fema_events <- final_dataset |>
+  filter(!is.na(disasterNumber)) |>
+  distinct(county_fips, disasterNumber, incidentType, disaster_group,
+           iaProgramDeclared, paProgramDeclared,
+           declaration_month = floor_date(as.Date(declarationDate), "month"))
+
+cat("Unique county-disaster events:", nrow(fema_events), "\n")
+
+# Step 2: Cross-join each county's full ZHVI history to its disaster events, then compute months_rel (negative = before disaster, positive = after)
+event_study <- zillow_monthly |>
+  select(county_fips, RegionName, State, date, zhvi) |>
+  inner_join(fema_events, by = "county_fips",
+             relationship = "many-to-many") |>
+  mutate(
+    months_rel = interval(declaration_month, date) %/% months(1)
+  ) |>
+  filter(months_rel >= -24, months_rel <= 48)
+
+cat("Event study rows:", nrow(event_study), "\n")
+cat("Unique county-disaster pairs:",
+    n_distinct(paste(event_study$county_fips, event_study$disasterNumber)), "\n")
+cat("Date range of months_rel:", min(event_study$months_rel), "to",
+    max(event_study$months_rel), "\n")
+
+# Step 3: Export for Tableau (load as separate data source from final_merged_dataset)
+write_csv(event_study, "event_study_dataset.csv")
+cat("Exported: event_study_dataset.csv\n")
+```
+
+
+
+
