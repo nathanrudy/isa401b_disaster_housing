@@ -1,0 +1,224 @@
+---
+title: "isa401_final_project"
+author: "Nathan Rudy"
+date: "2026-04-21"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Web Scraping, Wikipedia Article
+
+```{r}
+disaster_url <- "https://en.wikipedia.org/wiki/List_of_natural_disasters_in_the_United_States"
+
+robotstxt::paths_allowed(disaster_url)
+```
+
+```{r}
+# Step 1
+resp <- httr2::request(
+  disaster_url
+  ) |>
+  httr2::req_user_agent("An ISA 401 Bot from Miami University") |>
+  httr2::req_perform()
+
+disaster_webpage <- resp |> httr2::resp_body_raw() |> rvest::read_html()
+
+disaster_webpage |> 
+  rvest::html_elements("table.wikitable") |> 
+  rvest::html_table() -> disaster_table
+
+print(disaster_table)
+```
+
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(rvest)
+library(httr2)
+library(purrr)
+library(tigris)   # install.packages("tigris") if needed
+
+disaster_url <- "https://en.wikipedia.org/wiki/List_of_natural_disasters_in_the_United_States"
+
+resp <- httr2::request(disaster_url) |>
+  httr2::req_user_agent("An ISA 401 Bot from Miami University") |>
+  httr2::req_perform()
+
+disaster_webpage <- resp |> httr2::resp_body_raw() |> rvest::read_html()
+
+disaster_webpage |>
+  rvest::html_elements("table.wikitable") |>
+  rvest::html_table() -> disaster_table
+
+# ── 1. Combine & clean ───────────────────────────────────────────────────────
+
+combined <- bind_rows(disaster_table)
+
+combined <- combined |>
+  rename(
+    year     = `Year`,
+    type     = `Disaster`,
+    damage   = `Damage costUS$`,
+    location = `Location`
+  )
+
+# ── 2. Convert damage string → numeric (USD) ─────────────────────────────────
+
+parse_damage <- function(x) {
+  x <- str_to_lower(str_trim(x))
+
+  # Return NA for unknown/none entries
+  if (x %in% c("", "unknown", "n/a", "none", "minimal", "—", "-")) return(NA_real_)
+
+  # Strip citation brackets like [12], dollar signs, commas, spaces
+  x <- str_remove_all(x, "\\[.*?\\]|\\$|,|\\s")
+
+  # Extract the numeric part and the multiplier word
+  number    <- as.numeric(str_extract(x, "[0-9]+\\.?[0-9]*"))
+  multiplier <- case_when(
+    str_detect(x, "trillion") ~ 1e12,
+    str_detect(x, "billion")  ~ 1e9,
+    str_detect(x, "million")  ~ 1e6,
+    str_detect(x, "thousand") ~ 1e3,
+    TRUE                      ~ 1       # already a raw number
+  )
+
+  number * multiplier
+}
+
+cleaned <- combined |>
+  mutate(year = as.numeric(str_extract(year, "\\d{4}"))) |>
+  filter(!is.na(year), year >= 2000) |>
+  select(year, type, damage, location) |>
+  mutate(damage_usd = map_dbl(damage, parse_damage)) |>
+  select(-damage) |>                      # drop original string column
+  mutate(location = str_split(location, ";|\\band\\b")) |>
+  unnest(location) |>
+  mutate(location = str_trim(location)) |>
+  filter(location != "")
+
+# ── 3. Build a state-name → FIPS lookup from tigris ─────────────────────────
+#
+# tigris::fips_codes is a built-in dataframe with every state & county FIPS.
+# We'll use it to match state names and abbreviations found in location strings.
+
+data("fips_codes", package = "tigris")   # columns: state, state_code, state_name,
+                                          #          county_code, county, county_fips
+
+state_lookup <- fips_codes |>
+  select(state_name, state_abb = state, state_fips = state_code) |>
+  distinct()
+
+# Full US state names and abbreviations for detection
+all_state_names <- state_lookup$state_name
+all_state_abbs  <- state_lookup$state_abb
+
+# ── 4. Extract FIPS from location string ─────────────────────────────────────
+#
+# Strategy:
+#   a) Look for a known state name or abbreviation in the location string
+#   b) If "City, ST" pattern — also try Census geocoder for county-level FIPS
+#   c) Otherwise return state-level FIPS only (county = NA)
+
+get_fips_from_location <- function(loc) {
+
+  empty <- tibble(
+    input_location = loc,
+    state_fips     = NA_character_,
+    county_fips    = NA_character_,
+    full_fips      = NA_character_,
+    matched_place  = NA_character_
+  )
+
+  # ── a) Detect state name or abbreviation ───────────────────────────────────
+  matched_state <- state_lookup |>
+    filter(
+      str_detect(loc, regex(state_name, ignore_case = TRUE)) |
+      str_detect(loc, regex(paste0("\\b", state_abb, "\\b"), ignore_case = TRUE))
+    ) |>
+    slice(1)   # take first match if multiple
+
+  if (nrow(matched_state) == 0) return(empty)
+
+  sfips <- matched_state$state_fips
+  sname <- matched_state$state_name
+
+  # ── b) Try Census geocoder if pattern looks like "City, State" ─────────────
+  if (str_detect(loc, ",")) {
+    city  <- str_trim(str_extract(loc, "^[^,]+"))
+    state <- str_trim(str_extract(loc, "(?<=,).+$"))
+
+    geo_resp <- tryCatch({
+      httr2::request("https://geocoding.geo.census.gov/geocoder/geographies/address") |>
+        httr2::req_url_query(
+          city      = city,
+          state     = state,
+          benchmark = "Public_AR_Current",
+          vintage   = "Current_Current",
+          format    = "json",
+          layers    = "Counties"
+        ) |>
+        httr2::req_user_agent("An ISA 401 Bot from Miami University") |>
+        httr2::req_throttle(rate = 5) |>
+        httr2::req_perform()
+    }, error = function(e) NULL)
+
+    if (!is.null(geo_resp)) {
+      result <- tryCatch(geo_resp |> httr2::resp_body_json(), error = function(e) NULL)
+      geo    <- tryCatch(
+        result$result$addressMatches[[1]]$geographies$Counties[[1]],
+        error = function(e) NULL
+      )
+
+      if (!is.null(geo)) {
+        return(tibble(
+          input_location = loc,
+          state_fips     = geo$STATE,
+          county_fips    = geo$COUNTY,
+          full_fips      = geo$GEOID,   # 5-digit: state + county
+          matched_place  = geo$NAME
+        ))
+      }
+    }
+  }
+
+  # ── c) Fallback: state-level FIPS only ─────────────────────────────────────
+  tibble(
+    input_location = loc,
+    state_fips     = sfips,
+    county_fips    = NA_character_,
+    full_fips      = NA_character_,   # can't make a valid 5-digit without county
+    matched_place  = sname
+  )
+}
+
+# ── 5. Apply to unique locations only (saves API calls) ──────────────────────
+
+unique_locations <- unique(cleaned$location)
+
+fips_lookup <- map(unique_locations, get_fips_from_location) |>
+  bind_rows()
+
+# ── 6. Join back & finalize ──────────────────────────────────────────────────
+
+final <- cleaned |>
+  left_join(fips_lookup, by = c("location" = "input_location")) |>
+  select(
+    year,
+    type,
+    damage_usd,
+    input_location = location,
+    matched_place,
+    state_fips,
+    county_fips,
+    full_fips
+  )
+
+print(final)
+```
